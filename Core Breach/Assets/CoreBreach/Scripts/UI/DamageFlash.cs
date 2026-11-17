@@ -1,7 +1,7 @@
 using System.Collections;
 using UnityEngine;
 
-/// <summary>
+/// <summary>1
 /// Hiệu ứng chớp sáng (Damage Flash) khi nhân vật hoặc quái bị trúng đạn
 /// </summary>
 public class DamageFlash : MonoBehaviour

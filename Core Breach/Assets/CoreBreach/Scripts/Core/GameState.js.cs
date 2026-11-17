@@ -4,8 +4,10 @@
 public enum GameState
 {
     MainMenu,
+    CharacterSelect,
     Playing,
     Paused,
-    GameOver
+    GameOver,
+    Victory
 }
 

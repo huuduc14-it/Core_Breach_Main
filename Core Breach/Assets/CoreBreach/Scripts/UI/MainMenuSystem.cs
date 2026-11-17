@@ -78,7 +78,8 @@ public class MainMenuSystem : MonoBehaviour
     {
         if (GameManager.Instance != null && GameManager.Instance.HasActiveRun)
         {
-            GameManager.Instance.ResumeGame();
+            //GameManager.Instance.ResumeGame();
+            GameManager.Instance.ChangeState(GameState.Playing);
         }
     }
 
@@ -112,6 +113,52 @@ public class MainMenuSystem : MonoBehaviour
 
     private void OnGUI()
     {
+        if (GameManager.Instance == null) return;
+
+        if (GameManager.Instance.CurrentState == GameState.Victory)
+        {
+            GUIStyle victoryTitleStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 42,
+                fontStyle = FontStyle.Bold,
+                alignment = TextAnchor.MiddleCenter
+            };
+
+            victoryTitleStyle.normal.textColor = Color.cyan;
+
+            GUI.Label(
+                new Rect(0, Screen.height * 0.34f, Screen.width, 70),
+                "CORE GUARDIAN DEFEATED",
+                victoryTitleStyle
+            );
+
+            GUIStyle scoreStyle = new GUIStyle(GUI.skin.label)
+            {
+                fontSize = 20,
+                alignment = TextAnchor.MiddleCenter
+            };
+
+            GUI.Label(
+                new Rect(0, Screen.height * 0.44f, Screen.width, 40),
+                $"RUN COMPLETE | SCORE: {GameManager.Instance.Score}",
+                scoreStyle
+            );
+
+            if (GUI.Button(
+                new Rect(
+                    Screen.width / 2f - 130,
+                    Screen.height * 0.58f,
+                    260,
+                    50
+                ),
+                "RETURN TO MAIN MENU"))
+            {
+                Time.timeScale = 1f;
+                GameManager.Instance.ChangeState(GameState.MainMenu);
+            }
+
+            return;
+        }
         if (GameManager.Instance == null || GameManager.Instance.CurrentState != GameState.MainMenu) return;
 
         EnsureTextures();

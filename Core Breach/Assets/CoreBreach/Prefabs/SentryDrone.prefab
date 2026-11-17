@@ -11,9 +11,9 @@ GameObject:
   - component: {fileID: 4479892002461986603}
   - component: {fileID: 2944014762148969080}
   - component: {fileID: 2278443216237001127}
-  - component: {fileID: 7057417449138858875}
   - component: {fileID: 6747689020990339131}
   - component: {fileID: 623265734924952062}
+  - component: {fileID: -3515427219808929991}
   m_Layer: 0
   m_Name: SentryDrone
   m_TagString: Enemy
@@ -83,7 +83,7 @@ SpriteRenderer:
   m_GlobalIlluminationMeshLod: 0
   m_SortingLayerID: 0
   m_SortingLayer: 0
-  m_SortingOrder: 10
+  m_SortingOrder: 5
   m_MaskInteraction: 0
   m_Sprite: {fileID: 21300000, guid: eb4852253f2e4a91a2019c79adb6e7ae, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
@@ -120,10 +120,48 @@ Rigidbody2D:
     m_Bits: 0
   m_Interpolate: 0
   m_SleepingMode: 1
-  m_CollisionDetection: 0
+  m_CollisionDetection: 1
   m_Constraints: 4
---- !u!61 &7057417449138858875
-BoxCollider2D:
+--- !u!114 &6747689020990339131
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8608128201424872267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 07f13ae142d6b174c800cf58263566c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Enemy
+  patrolSpeed: 3.5
+  chaseSpeed: 3.5
+  rushSpeed: 6
+  detectRadius: 6
+  loseTargetRadius: 9
+  rushDistance: 3
+  attackDamage: 5
+  rushDuration: 0.45
+  recoverDuration: 1.2
+  attackCooldown: 1
+  patrolChangeTime: 2
+--- !u!114 &623265734924952062
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8608128201424872267}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2dda5655fc267d0489ca1bc0c3bbe38a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
+  maxHealth: 20
+  scrapReward: 2
+  scrapPrefab: {fileID: 5162738495016273840, guid: 918273645019283746501928374620bb, type: 3}
+--- !u!58 &-3515427219808929991
+CircleCollider2D:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -157,45 +195,4 @@ BoxCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
-    pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1, y: 1}
-    newSize: {x: 1, y: 1}
-    adaptiveTilingThreshold: 0.5
-    drawMode: 0
-    adaptiveTiling: 0
-  m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
-  m_EdgeRadius: 0
---- !u!114 &6747689020990339131
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8608128201424872267}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 07f13ae142d6b174c800cf58263566c7, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Enemy
-  patrolSpeed: 3.5
-  rushSpeed: 6
-  attackDamage: 5
-  detectRadius: 6
-  rushDistance: 3
---- !u!114 &623265734924952062
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8608128201424872267}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2dda5655fc267d0489ca1bc0c3bbe38a, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
-  maxHealth: 20
-  scrapReward: 2
+  m_Radius: 0.4

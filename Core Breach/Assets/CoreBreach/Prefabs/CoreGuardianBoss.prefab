@@ -170,6 +170,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dda5655fc267d0489ca1bc0c3bbe38a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
+  scrapPrefab: {fileID: 5162738495016273840, guid: 918273645019283746501928374620bb, type: 3}
   maxHealth: 180
   scrapReward: 10
 --- !u!114 &8281746201948271017

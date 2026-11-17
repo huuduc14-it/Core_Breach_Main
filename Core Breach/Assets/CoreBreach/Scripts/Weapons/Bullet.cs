@@ -13,6 +13,8 @@ public class Bullet : MonoBehaviour
     [SerializeField] private float lifeTime = 3f;
     [SerializeField] private bool isPlayerBullet = true;
 
+    public bool IsPlayerBullet => isPlayerBullet;
+
     private Rigidbody2D rb;
 
     private void Awake()
@@ -23,10 +25,22 @@ public class Bullet : MonoBehaviour
         if (col != null) col.isTrigger = true;
     }
 
+    //private void Start()
+    //{
+    //    // Tự huỷ sau thời gian tồn tại để giải phóng bộ nhớ
+    //    Destroy(gameObject, lifeTime);
+    //}
     private void Start()
     {
-        // Tự huỷ sau thời gian tồn tại để giải phóng bộ nhớ
-        Destroy(gameObject, lifeTime);
+        float lifeMultiplier = 1f;
+
+        if (RunModifierSystem.Instance != null)
+        {
+            lifeMultiplier =
+                RunModifierSystem.Instance.GetBulletLifeMultiplier();
+        }
+
+        Destroy(gameObject, lifeTime * lifeMultiplier);
     }
 
     /// <summary>
@@ -47,7 +61,16 @@ public class Bullet : MonoBehaviour
         isPlayerBullet = playerBullet;
 
         Vector2 normDir = direction.normalized;
-        rb.linearVelocity = normDir * speed;
+        //rb.linearVelocity = normDir * speed;
+        float speedMultiplier = 1f;
+
+        if (RunModifierSystem.Instance != null)
+        {
+            speedMultiplier =
+                RunModifierSystem.Instance.GetBulletSpeedMultiplier();
+        }
+
+        rb.linearVelocity = normDir * speed * speedMultiplier;
 
         // Xoay đạn theo hướng bay
         float angle = Mathf.Atan2(normDir.y, normDir.x) * Mathf.Rad2Deg;
@@ -58,6 +81,7 @@ public class Bullet : MonoBehaviour
     {
         // Bỏ qua nếu đạn chạm vào chính người bắn
         if (isPlayerBullet && collision.CompareTag("Player")) return;
+        if (isPlayerBullet && collision.CompareTag("Friendly")) return;
         if (!isPlayerBullet && collision.CompareTag("Enemy")) return;
 
         // Đạn Player trúng Enemy
@@ -68,6 +92,8 @@ public class Bullet : MonoBehaviour
             {
                 enemyHealth.TakeDamage(damage);
             }
+            Vector2 hitNorm = rb != null ? -rb.linearVelocity.normalized : Vector2.up;
+            CombatFeedback.SpawnSparks(transform.position, hitNorm, new Color(0f, 0.95f, 1f), 6);
             Destroy(gameObject);
             return;
         }
@@ -80,6 +106,8 @@ public class Bullet : MonoBehaviour
             {
                 playerHealth.TakeDamage(damage);
             }
+            Vector2 hitNorm = rb != null ? -rb.linearVelocity.normalized : Vector2.up;
+            CombatFeedback.SpawnSparks(transform.position, hitNorm, new Color(1f, 0.25f, 0.25f), 6);
             Destroy(gameObject);
             return;
         }
@@ -87,6 +115,8 @@ public class Bullet : MonoBehaviour
         // Đạn chạm vào Tường hoặc các vật cản khác
         if (!collision.isTrigger)
         {
+            Vector2 hitNorm = rb != null ? -rb.linearVelocity.normalized : Vector2.up;
+            CombatFeedback.SpawnSparks(transform.position, hitNorm, new Color(1f, 0.8f, 0.3f), 4);
             Destroy(gameObject);
         }
     }

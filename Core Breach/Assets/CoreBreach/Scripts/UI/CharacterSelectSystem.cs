@@ -115,30 +115,133 @@ public class CharacterSelectSystem : MonoBehaviour
         }
     }
 
+    //public void ConfirmSelectionAndStart()
+    //{
+    //    isSelectionOpen = false;
+    //    if (GameManager.Instance != null)
+    //    {
+    //        GameManager.Instance.ChangeState(GameState.Playing);
+    //    }
+
+    //    // Áp dụng lớp nhân vật đã chọn cho Player
+    //    ApplyCharacter(selectedClass);
+
+    //    if (AudioManager.Instance != null)
+    //    {
+    //        AudioManager.Instance.PlayRoomClear();
+    //    }
+
+    //    CombatFeedback.ShowNotice(Vector3.zero, "SYSTEM INITIALIZED: " + selectedClass, Color.cyan);
+    //    Debug.Log($"[CharacterSelect] Đã chọn: {selectedClass} - Bắt đầu xâm nhập hầm Vault!");
+
+    //    // Khởi động phòng và spawn quái ngay sau khi người chơi chọn xong nhân vật
+    //    //RoomController room = FindFirstObjectByType<RoomController>();
+    //    //if (room != null && !room.IsRoomStarted())
+    //    //{
+    //    //    room.StartRoom();
+    //    //}
+    //    // Kích hoạt Run Modifier khi bắt đầu lượt chơi mới
+    //    RunModifierSystem modifierSystem =
+    //        FindFirstObjectByType<RunModifierSystem>();
+
+    //    if (modifierSystem != null)
+    //    {
+    //        modifierSystem.RollRandomModifier();
+
+    //        PlayerHUD.ShowWaveBanner(
+    //            "RUN MODIFIER: " + modifierSystem.ActiveModifier,
+    //            modifierSystem.GetModifierDescription(
+    //                modifierSystem.ActiveModifier
+    //            ),
+    //            Color.cyan,
+    //            3f
+    //        );
+    //    }
+
+    //    // Bắt đầu hệ thống phòng
+    //    RoomManager roomManager =
+    //        FindFirstObjectByType<RoomManager>();
+
+    //    if (roomManager != null)
+    //    {
+    //        roomManager.StartRun();
+    //    }
+    //    else
+    //    {
+    //        Debug.LogError(
+    //            "[CharacterSelect] Không tìm thấy RoomManager trong Scene!"
+    //        );
+    //    }
+    //}
+
     public void ConfirmSelectionAndStart()
     {
         isSelectionOpen = false;
+
+        // 1. Áp dụng lớp nhân vật đã chọn
+        ApplyCharacter(selectedClass);
+
+        // 2. Kích hoạt Run Modifier
+        RunModifierSystem modifierSystem =
+            FindFirstObjectByType<RunModifierSystem>();
+
+        if (modifierSystem != null)
+        {
+            modifierSystem.RollRandomModifier();
+
+            // Hiển thị thông báo Modifier
+            PlayerHUD.ShowWaveBanner(
+                "RUN MODIFIER: " + modifierSystem.ActiveModifier,
+                modifierSystem.GetModifierDescription(
+                    modifierSystem.ActiveModifier
+                ),
+                Color.cyan,
+                3f
+            );
+        }
+        else
+        {
+            Debug.LogWarning(
+                "[CharacterSelect] Không tìm thấy RunModifierSystem!"
+            );
+        }
+
+        // 3. Chuyển trạng thái game sang Playing
         if (GameManager.Instance != null)
         {
             GameManager.Instance.ChangeState(GameState.Playing);
         }
 
-        // Áp dụng lớp nhân vật đã chọn cho Player
-        ApplyCharacter(selectedClass);
-
+        // 4. Phát âm thanh thông báo
         if (AudioManager.Instance != null)
         {
             AudioManager.Instance.PlayRoomClear();
         }
 
-        CombatFeedback.ShowNotice(Vector3.zero, "SYSTEM INITIALIZED: " + selectedClass, Color.cyan);
-        Debug.Log($"[CharacterSelect] Đã chọn: {selectedClass} - Bắt đầu xâm nhập hầm Vault!");
+        // 5. Hiển thị thông báo khởi động
+        CombatFeedback.ShowNotice(
+            Vector3.zero,
+            "SYSTEM INITIALIZED: " + selectedClass,
+            Color.cyan
+        );
 
-        // Khởi động phòng và spawn quái ngay sau khi người chơi chọn xong nhân vật
-        RoomController room = FindFirstObjectByType<RoomController>();
-        if (room != null && !room.IsRoomStarted())
+        Debug.Log(
+            $"[CharacterSelect] Đã chọn: {selectedClass} - Bắt đầu xâm nhập hầm Vault!"
+        );
+
+        // 6. Khởi động hệ thống phòng
+        RoomManager roomManager =
+            FindFirstObjectByType<RoomManager>();
+
+        if (roomManager != null)
         {
-            room.StartRoom();
+            roomManager.StartRun();
+        }
+        else
+        {
+            Debug.LogError(
+                "[CharacterSelect] Không tìm thấy RoomManager trong Scene!"
+            );
         }
     }
 

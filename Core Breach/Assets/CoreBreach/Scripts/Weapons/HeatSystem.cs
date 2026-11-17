@@ -47,7 +47,13 @@ public class HeatSystem : MonoBehaviour
         // Tự động làm mát nếu sau một khoảng delay không bắn
         if (Time.time >= lastShotTime + coolDelay && CurrentHeat > 0f)
         {
-            CurrentHeat = Mathf.Max(0f, CurrentHeat - coolingRate * Time.deltaTime);
+            float rate = coolingRate;
+            if (CombatFeedback.Instance != null && CombatFeedback.Instance.IsOverdriveActive)
+            {
+                rate *= 2.0f; // Tản nhiệt nhanh gấp đôi trong trạng thái Overdrive
+            }
+
+            CurrentHeat = Mathf.Max(0f, CurrentHeat - rate * Time.deltaTime);
             OnHeatChanged?.Invoke(CurrentHeat, maxHeat, IsOverheated);
         }
     }

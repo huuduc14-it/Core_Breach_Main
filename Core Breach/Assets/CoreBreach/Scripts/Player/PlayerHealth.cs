@@ -13,6 +13,8 @@ public class PlayerHealth : MonoBehaviour
 
     public float CurrentHealth { get; private set; }
     public float CurrentArmor { get; private set; }
+    public float MaxHealth => maxHealth;
+    public float MaxArmor => maxArmor;
 
     public event Action<float, float> OnHealthChanged; // (currentHealth, maxHealth)
     public event Action<float, float> OnArmorChanged;  // (currentArmor, maxArmor)
@@ -33,6 +35,16 @@ public class PlayerHealth : MonoBehaviour
 
     private void Start()
     {
+        OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
+        OnArmorChanged?.Invoke(CurrentArmor, maxArmor);
+    }
+
+    public void SetMaxStats(float hp, float armor)
+    {
+        maxHealth = hp;
+        maxArmor = armor;
+        CurrentHealth = hp;
+        CurrentArmor = armor;
         OnHealthChanged?.Invoke(CurrentHealth, maxHealth);
         OnArmorChanged?.Invoke(CurrentArmor, maxArmor);
     }
@@ -62,15 +74,18 @@ public class PlayerHealth : MonoBehaviour
             OnArmorChanged?.Invoke(CurrentArmor, maxArmor);
         }
 
-        // Rung màn hình khi nhận sát thương
+        // Rung nhẹ màn hình khi nhận sát thương (Game Juice vừa phải)
         if (CameraFollow.Instance != null)
         {
-            CameraFollow.Instance.Shake(0.18f, 0.25f);
+            CameraFollow.Instance.Shake(0.08f, 0.06f);
         }
 
         // Chớp đỏ cảnh báo
         DamageFlash flash = GetComponent<DamageFlash>();
         if (flash != null) flash.Flash();
+
+        // Hiển thị sát thương nảy lên màu đỏ
+        CombatFeedback.ShowDamage(transform.position, damage, false, true);
 
         // Nếu còn sát thương sót lại -> trừ vào Máu
         if (remainingDamage > 0f)

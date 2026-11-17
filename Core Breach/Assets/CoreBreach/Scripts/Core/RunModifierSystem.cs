@@ -36,10 +36,10 @@ public class RunModifierSystem : MonoBehaviour
         Instance = this;
     }
 
-    private void Start()
-    {
-        RollRandomModifier();
-    }
+    //private void Start()
+    //{
+    //    RollRandomModifier();
+    //}
 
     /// <summary>
     /// Xúc xắc chọn ngẫu nhiên 1 Modifier cho toàn bộ lượt chơi Vault
@@ -85,5 +85,41 @@ public class RunModifierSystem : MonoBehaviour
     public float GetBulletLifeMultiplier()
     {
         return activeModifier == RunModifierType.LowGravity ? 1.5f : 1.0f;
+    }
+
+    //OVERCLOCK 
+    // Quái di chuyển nhanh hơn 30%
+    public float GetEnemySpeedMultiplier()
+    {
+        return activeModifier == RunModifierType.Overclock
+            ? 1.3f
+            : 1f;
+    }
+
+    // Quái có chu kỳ bắn nhanh hơn 25%
+    // 0.75 nghĩa là thời gian chờ giữa các lần bắn giảm còn 75%
+    public float GetEnemyFireRateMultiplier()
+    {
+        return activeModifier == RunModifierType.Overclock
+            ? 0.75f
+            : 1f;
+    }
+
+    // ================= BLACKOUT =================
+
+    // Quái chỉ phát hiện Player ở khoảng cách ngắn hơn
+    public float GetEnemyDetectionMultiplier()
+    {
+        return activeModifier == RunModifierType.Blackout
+            ? 0.6f
+            : 1f;
+    }
+
+    // Tầm tấn công của Turret và Sniper giảm
+    public float GetEnemyRangeMultiplier()
+    {
+        return activeModifier == RunModifierType.Blackout
+            ? 0.7f
+            : 1f;
     }
 }

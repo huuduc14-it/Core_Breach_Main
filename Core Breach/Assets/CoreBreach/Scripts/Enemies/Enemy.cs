@@ -1,150 +1,10 @@
-//using UnityEngine;
-
-///// <summary>
-///// AI cho Sentry Drone (Kẻ địch cận chiến) theo Game Concept Core Breach:
-///// FSM: Tuần tra (Patrol) -> Phát hiện (Chase) -> Lao vào húc (Rush)
-///// Tốc độ: 3.5f, Tốc độ lao: 6.0f, Sát thương: 5
-///// </summary>
-//[RequireComponent(typeof(Rigidbody2D), typeof(Collider2D))]
-//public class Enemy : MonoBehaviour
-//{
-//    public enum EnemyState { Patrol, Chase, Rush }
-
-//    [Header("Stats theo Game Concept")]
-//    [SerializeField] private float patrolSpeed = 3.5f;
-//    [SerializeField] private float rushSpeed = 6.0f;
-//    [SerializeField] private float attackDamage = 5f;
-
-//    [Header("Detection Settings")]
-//    [SerializeField] private float detectRadius = 6.0f;
-//    [SerializeField] private float rushDistance = 3.0f;
-
-//    private Rigidbody2D rb;
-//    private Transform playerTransform;
-//    private EnemyState currentState = EnemyState.Patrol;
-
-//    private Vector2 patrolDirection = Vector2.right;
-//    private float patrolTimer = 0f;
-
-//    private void Awake()
-//    {
-//        rb = GetComponent<Rigidbody2D>();
-//        rb.gravityScale = 0f;
-//        rb.freezeRotation = true;
-//    }
-
-//    private void Start()
-//    {
-//        FindPlayer();
-//    }
-
-//    private void Update()
-//    {
-//        if (playerTransform == null)
-//        {
-//            FindPlayer();
-//            return;
-//        }
-
-//        float distanceToPlayer = Vector2.Distance(transform.position, playerTransform.position);
-
-//        // Chuyển đổi trạng thái FSM
-//        switch (currentState)
-//        {
-//            case EnemyState.Patrol:
-//                if (distanceToPlayer <= detectRadius)
-//                {
-//                    currentState = EnemyState.Chase;
-//                }
-//                break;
-
-//            case EnemyState.Chase:
-//                if (distanceToPlayer <= rushDistance)
-//                {
-//                    currentState = EnemyState.Rush;
-//                }
-//                else if (distanceToPlayer > detectRadius * 1.3f)
-//                {
-//                    currentState = EnemyState.Patrol;
-//                }
-//                break;
-
-//            case EnemyState.Rush:
-//                if (distanceToPlayer > rushDistance * 1.5f)
-//                {
-//                    currentState = EnemyState.Chase;
-//                }
-//                break;
-//        }
-//    }
-
-//    private void FixedUpdate()
-//    {
-//        switch (currentState)
-//        {
-//            case EnemyState.Patrol:
-//                PatrolLogic();
-//                break;
-
-//            case EnemyState.Chase:
-//                ChaseLogic(patrolSpeed);
-//                break;
-
-//            case EnemyState.Rush:
-//                ChaseLogic(rushSpeed);
-//                break;
-//        }
-//    }
-
-//    private void FindPlayer()
-//    {
-//        GameObject playerObj = GameObject.FindWithTag("Player");
-//        if (playerObj != null)
-//        {
-//            playerTransform = playerObj.transform;
-//        }
-//    }
-
-//    private void PatrolLogic()
-//    {
-//        patrolTimer -= Time.fixedDeltaTime;
-//        if (patrolTimer <= 0f)
-//        {
-//            // Đổi hướng ngẫu nhiên sau 1.5 - 3 giây
-//            patrolDirection = Random.insideUnitCircle.normalized;
-//            patrolTimer = Random.Range(1.5f, 3.0f);
-//        }
-
-//        rb.linearVelocity = patrolDirection * (patrolSpeed * 0.5f);
-//    }
-
-//    private void ChaseLogic(float speed)
-//    {
-//        if (playerTransform == null) return;
-
-//        Vector2 direction = ((Vector2)playerTransform.position - (Vector2)transform.position).normalized;
-//        rb.linearVelocity = direction * speed;
-
-//        // Xoay mặt nhìn về phía Player
-//        float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-//        transform.rotation = Quaternion.Euler(0f, 0f, angle);
-//    }
-
-//    private void OnCollisionEnter2D(Collision2D collision)
-//    {
-//        if (collision.gameObject.CompareTag("Player"))
-//        {
-//            PlayerHealth playerHealth = collision.gameObject.GetComponent<PlayerHealth>();
-//            if (playerHealth != null)
-//            {
-//                playerHealth.TakeDamage(attackDamage);
-//            }
-//        }
-//    }
-//}
-
-
 using UnityEngine;
+
+/// <summary>
+/// AI cho Sentry Drone (Kẻ địch cận chiến) theo Game Concept Core Breach:
+/// FSM: Tuần tra (Patrol) -> Đuổi theo (Chase) -> Lao vào húc (Rush) -> Hồi chiêu (Recover)
+/// Chỉ số theo Game Concept: HP 20, ATK 5, Speed 3.5, Rush Speed 6.0 - 7.0
+/// </summary>
 
 [RequireComponent(typeof(Rigidbody2D))]
 [RequireComponent(typeof(Collider2D))]
@@ -219,16 +79,29 @@ public class Enemy : MonoBehaviour
             transform.position,
             player.position
         );
+        float detectionMultiplier = 1f;
+
+        if (RunModifierSystem.Instance != null)
+        {
+            detectionMultiplier =
+                RunModifierSystem.Instance.GetEnemyDetectionMultiplier();
+        }
+
+        float effectiveDetectRadius =
+            detectRadius * detectionMultiplier;
+
+        float effectiveLoseTargetRadius =
+            loseTargetRadius * detectionMultiplier;
 
         switch (currentState)
         {
             case EnemyState.Patrol:
-                if (distance <= detectRadius)
+                if (distance <= effectiveDetectRadius)
                     ChangeState(EnemyState.Chase);
                 break;
 
             case EnemyState.Chase:
-                if (distance > loseTargetRadius)
+                if (distance > effectiveLoseTargetRadius)
                     ChangeState(EnemyState.Patrol);
 
                 else if (distance <= rushDistance)
@@ -257,18 +130,45 @@ public class Enemy : MonoBehaviour
 
     private void FixedUpdate()
     {
+        //switch (currentState)
+        //{
+        //    case EnemyState.Patrol:
+        //        Patrol();
+        //        break;
+
+        //    case EnemyState.Chase:
+        //        MoveTowardsPlayer(chaseSpeed);
+        //        break;
+
+        //    case EnemyState.Rush:
+        //        rb.linearVelocity = rushDirection * rushSpeed;
+        //        break;
+
+        //    case EnemyState.Recover:
+        //        rb.linearVelocity = Vector2.zero;
+        //        break;
+        //}
+        float speedMultiplier = 1f;
+
+        if (RunModifierSystem.Instance != null)
+        {
+            speedMultiplier =
+                RunModifierSystem.Instance.GetEnemySpeedMultiplier();
+        }
+
         switch (currentState)
         {
             case EnemyState.Patrol:
-                Patrol();
+                Patrol(speedMultiplier);
                 break;
 
             case EnemyState.Chase:
-                MoveTowardsPlayer(chaseSpeed);
+                MoveTowardsPlayer(chaseSpeed * speedMultiplier);
                 break;
 
             case EnemyState.Rush:
-                rb.linearVelocity = rushDirection * rushSpeed;
+                rb.linearVelocity =
+                    rushDirection * rushSpeed * speedMultiplier;
                 break;
 
             case EnemyState.Recover:
@@ -279,10 +179,16 @@ public class Enemy : MonoBehaviour
 
     private void FindPlayer()
     {
-        GameObject obj = GameObject.FindGameObjectWithTag("Player");
-
-        if (obj != null)
-            player = obj.transform;
+        if (PlayerMovement.PlayerTransform != null)
+        {
+            player = PlayerMovement.PlayerTransform;
+        }
+        else
+        {
+            GameObject obj = GameObject.FindGameObjectWithTag("Player");
+            if (obj != null)
+                player = obj.transform;
+        }
     }
 
     private void ChangeState(EnemyState newState)
@@ -296,7 +202,7 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    private void Patrol()
+    private void Patrol(float speedMultiplier)
     {
         patrolTimer -= Time.fixedDeltaTime;
 
@@ -306,7 +212,8 @@ public class Enemy : MonoBehaviour
             patrolTimer = patrolChangeTime;
         }
 
-        rb.linearVelocity = patrolDirection * patrolSpeed;
+        //rb.linearVelocity = patrolDirection * patrolSpeed;
+        rb.linearVelocity = patrolDirection * patrolSpeed * speedMultiplier;
         RotateTowards(patrolDirection);
     }
 
@@ -349,21 +256,28 @@ public class Enemy : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if (currentState != EnemyState.Rush) return;
+        HandlePlayerContact(collision.gameObject);
+    }
 
-        if (!collision.gameObject.CompareTag("Player")) return;
+    private void OnTriggerEnter2D(Collider2D collision)
+    {
+        HandlePlayerContact(collision.gameObject);
+    }
 
+    private void HandlePlayerContact(GameObject target)
+    {
+        if (!target.CompareTag("Player") && target.GetComponent<PlayerHealth>() == null) return;
         if (Time.time < nextAttackTime) return;
 
-        PlayerHealth health =
-            collision.gameObject.GetComponent<PlayerHealth>();
-
+        PlayerHealth health = target.GetComponent<PlayerHealth>();
         if (health != null)
         {
             health.TakeDamage(attackDamage);
             nextAttackTime = Time.time + attackCooldown;
+            Debug.Log($"[Enemy] Sentry Drone húc trúng Unit-7! Gây {attackDamage} sát thương.");
         }
 
+        // Bật lùi lại và chuyển sang Recover
         ChangeState(EnemyState.Recover);
     }
 

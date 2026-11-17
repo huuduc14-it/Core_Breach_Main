@@ -28,6 +28,15 @@ public class AudioManager : MonoBehaviour
     [Header("World SFX")]
     [SerializeField] private AudioClip scrapCollectSound;
     [SerializeField] private AudioClip roomClearSound;
+    [SerializeField] private AudioClip portalWarpSound;
+
+    public bool IsSFXEnabled { get; set; } = true;
+    public bool IsMusicEnabled { get; set; } = true;
+    public float MasterVolume { get; set; } = 1.0f;
+
+    private const string PREF_SFX = "CoreBreach_SFXEnabled";
+    private const string PREF_MUSIC = "CoreBreach_MusicEnabled";
+    private const string PREF_VOLUME = "CoreBreach_MasterVolume";
 
     private void Awake()
     {
@@ -38,6 +47,10 @@ public class AudioManager : MonoBehaviour
         }
         Instance = this;
 
+        IsSFXEnabled = PlayerPrefs.GetInt(PREF_SFX, 1) == 1;
+        IsMusicEnabled = PlayerPrefs.GetInt(PREF_MUSIC, 1) == 1;
+        MasterVolume = PlayerPrefs.GetFloat(PREF_VOLUME, 1.0f);
+
         if (sfxSource == null)
         {
             sfxSource = gameObject.AddComponent<AudioSource>();
@@ -47,11 +60,47 @@ public class AudioManager : MonoBehaviour
         EnsureAudioClips();
     }
 
-    public void PlaySFX(AudioClip clip, float volume = 1f)
+    public void SetSFXEnabled(bool enabled)
     {
+        IsSFXEnabled = enabled;
+        PlayerPrefs.SetInt(PREF_SFX, enabled ? 1 : 0);
+        PlayerPrefs.Save();
+    }
+
+    public void SetMusicEnabled(bool enabled)
+    {
+        IsMusicEnabled = enabled;
+        PlayerPrefs.SetInt(PREF_MUSIC, enabled ? 1 : 0);
+        PlayerPrefs.Save();
+        if (musicSource != null)
+        {
+            musicSource.mute = !enabled;
+        }
+    }
+
+    public void SetMasterVolume(float volume)
+    {
+        MasterVolume = Mathf.Clamp01(volume);
+        PlayerPrefs.SetFloat(PREF_VOLUME, MasterVolume);
+        PlayerPrefs.Save();
+        if (sfxSource != null) sfxSource.volume = MasterVolume;
+        if (musicSource != null) musicSource.volume = MasterVolume;
+    }
+
+    public void PlaySFX(AudioClip clip, float volume = 1f, bool randomizePitch = true)
+    {
+        if (!IsSFXEnabled) return;
         if (clip != null && sfxSource != null)
         {
-            sfxSource.PlayOneShot(clip, volume);
+            if (randomizePitch)
+            {
+                sfxSource.pitch = UnityEngine.Random.Range(0.93f, 1.07f);
+            }
+            else
+            {
+                sfxSource.pitch = 1f;
+            }
+            sfxSource.PlayOneShot(clip, volume * MasterVolume);
         }
     }
 
@@ -65,6 +114,7 @@ public class AudioManager : MonoBehaviour
     public void PlayBossRoar() => PlaySFX(bossRoarSound, 1f);
     public void PlayScrapCollect() => PlaySFX(scrapCollectSound, 0.75f);
     public void PlayRoomClear() => PlaySFX(roomClearSound, 0.9f);
+    public void PlayPortalWarp() => PlaySFX(portalWarpSound, 1.0f, false);
 
     // =========================================================================
     // PROCEDURAL AUDIO SYNTHESIZER (Tự động tạo âm thanh Sci-Fi sắc nét)
@@ -81,6 +131,7 @@ public class AudioManager : MonoBehaviour
         if (bossRoarSound == null) bossRoarSound = CreateBossRoarSound();
         if (scrapCollectSound == null) scrapCollectSound = CreateChimeSound();
         if (roomClearSound == null) roomClearSound = CreateFanfareSound();
+        if (portalWarpSound == null) portalWarpSound = CreateWarpSound();
     }
 
     private AudioClip CreateLaserSound()
@@ -240,6 +291,29 @@ public class AudioManager : MonoBehaviour
             data[i] = (tone + noise) * (1f - t) * 0.6f;
         }
         AudioClip clip = AudioClip.Create("SFX_BossRoar", count, 1, rate, false);
+        clip.SetData(data, 0);
+        return clip;
+    }
+
+    private AudioClip CreateWarpSound()
+    {
+        int rate = 44100;
+        float duration = 0.65f;
+        int count = (int)(rate * duration);
+        float[] data = new float[count];
+        for (int i = 0; i < count; i++)
+        {
+            float t = (float)i / count;
+            // Sweep frequency from 150Hz up to 1200Hz
+            float freq = Mathf.Lerp(150f, 1200f, t * t);
+            float harmonic = freq * 1.5f;
+            float env = Mathf.Sin(t * Mathf.PI * 0.85f);
+            float pulse = Mathf.Sin(2f * Mathf.PI * 25f * t); // 25Hz tremolo
+            float signal = Mathf.Sin(2f * Mathf.PI * freq * i / rate) * 0.5f 
+                         + Mathf.Sin(2f * Mathf.PI * harmonic * i / rate) * 0.25f;
+            data[i] = signal * env * (0.8f + pulse * 0.2f) * 0.5f;
+        }
+        AudioClip clip = AudioClip.Create("SFX_PortalWarp", count, 1, rate, false);
         clip.SetData(data, 0);
         return clip;
     }

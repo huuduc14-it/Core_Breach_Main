@@ -142,6 +142,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2dda5655fc267d0489ca1bc0c3bbe38a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::EnemyHealth
+  scrapPrefab: {fileID: 5162738495016273840, guid: 918273645019283746501928374620bb, type: 3}
   maxHealth: 15
   scrapReward: 3
 --- !u!114 &7198236401928374016
@@ -160,7 +161,7 @@ MonoBehaviour:
   attackDamage: 7
   attackRange: 8
   rotationSpeed: 5
-  enemyBulletPrefab: {fileID: 8579131040520093251, guid: d7b395336f9d5c54b88497718d6bbbed, type: 3}
+  enemyBulletPrefab: {fileID: 7182930415263748590, guid: 818273645019283746501928374610aa, type: 3}
   firePoint: {fileID: 7198236401928374012}
   canBeHacked: 1
   hackedDuration: 6

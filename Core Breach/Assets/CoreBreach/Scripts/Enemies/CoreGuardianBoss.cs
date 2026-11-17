@@ -234,7 +234,7 @@ public class CoreGuardianBoss : MonoBehaviour
     {
         if (bulletPrefab == null)
         {
-            Bullet existing = FindObjectOfType<Bullet>();
+            Bullet existing = FindFirstObjectByType<Bullet>();
             if (existing != null) bulletPrefab = existing.gameObject;
         }
 

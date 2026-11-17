@@ -94,11 +94,31 @@ public class KamikazeBot : MonoBehaviour
 
         if (playerTransform == null) return;
 
+        //float dist = Vector2.Distance(transform.position, playerTransform.position);
+        //if (dist <= detectRadius)
         float dist = Vector2.Distance(transform.position, playerTransform.position);
-        if (dist <= detectRadius)
+
+        float detectionMultiplier = 1f;
+
+        if (RunModifierSystem.Instance != null)
+        {
+            detectionMultiplier =
+                RunModifierSystem.Instance.GetEnemyDetectionMultiplier();
+        }
+
+        if (dist <= detectRadius * detectionMultiplier)
         {
             Vector2 dir = ((Vector2)playerTransform.position - (Vector2)transform.position).normalized;
-            rb.linearVelocity = dir * moveSpeed;
+            //rb.linearVelocity = dir * moveSpeed;
+            float speedMultiplier = 1f;
+
+            if (RunModifierSystem.Instance != null)
+            {
+                speedMultiplier =
+                    RunModifierSystem.Instance.GetEnemySpeedMultiplier();
+            }
+
+            rb.linearVelocity = dir * moveSpeed * speedMultiplier;
 
             // Lật mặt theo hướng di chuyển
             if (sr != null)

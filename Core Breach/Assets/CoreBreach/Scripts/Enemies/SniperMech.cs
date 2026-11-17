@@ -76,12 +76,35 @@ public class SniperMech : MonoBehaviour
 
         if (cooldownTimer > 0f)
         {
+            //cooldownTimer -= Time.deltaTime;
+            float fireMultiplier = 1f;
+
+            if (RunModifierSystem.Instance != null)
+            {
+                fireMultiplier =
+                    RunModifierSystem.Instance.GetEnemyFireRateMultiplier();
+            }
+
             cooldownTimer -= Time.deltaTime;
         }
 
         float dist = Vector2.Distance(transform.position, playerTransform.position);
 
-        if (!isAiming && cooldownTimer <= 0f && dist <= optimalDistance + 3f)
+        //if (!isAiming && cooldownTimer <= 0f && dist <= optimalDistance + 3f)
+        //{
+        //    StartCoroutine(AimAndShootRoutine());
+        //}
+        float rangeMultiplier = 1f;
+
+        if (RunModifierSystem.Instance != null)
+        {
+            rangeMultiplier =
+                RunModifierSystem.Instance.GetEnemyRangeMultiplier();
+        }
+
+        if (!isAiming &&
+            cooldownTimer <= 0f &&
+            dist <= (optimalDistance + 3f) * rangeMultiplier)
         {
             StartCoroutine(AimAndShootRoutine());
         }
@@ -89,6 +112,13 @@ public class SniperMech : MonoBehaviour
 
     private void FixedUpdate()
     {
+        float speedMultiplier = 1f;
+
+        if (RunModifierSystem.Instance != null)
+        {
+            speedMultiplier =
+                RunModifierSystem.Instance.GetEnemySpeedMultiplier();
+        }
         if (isAiming)
         {
             rb.linearVelocity = Vector2.zero;
@@ -103,18 +133,21 @@ public class SniperMech : MonoBehaviour
         // Nếu quá gần: Lùi lại giữ khoảng cách
         if (dist < minDistance)
         {
-            rb.linearVelocity = -toPlayer * (moveSpeed * 1.1f);
+            //rb.linearVelocity = -toPlayer * (moveSpeed * 1.1f);
+            rb.linearVelocity = -toPlayer * (moveSpeed * speedMultiplier * 1.1f);
         }
         // Nếu quá xa: Tiến lại gần
         else if (dist > optimalDistance + 1f)
         {
-            rb.linearVelocity = toPlayer * moveSpeed;
+            //rb.linearVelocity = toPlayer * moveSpeed;
+            rb.linearVelocity = toPlayer * moveSpeed * speedMultiplier;
         }
         else
         {
             // Đi ngang để né đạn (Strafing)
             Vector2 perp = new Vector2(-toPlayer.y, toPlayer.x);
-            rb.linearVelocity = perp * (moveSpeed * 0.7f);
+            //rb.linearVelocity = perp * (moveSpeed * 0.7f);
+            rb.linearVelocity = perp * (moveSpeed * speedMultiplier * 0.7f);
         }
 
         if (sr != null && toPlayer.x != 0)
@@ -144,7 +177,16 @@ public class SniperMech : MonoBehaviour
         // Bắn phát súng ngắm cao tốc
         FireSniperBullet();
 
-        cooldownTimer = attackCooldown;
+        //cooldownTimer = attackCooldown;
+        float fireMultiplier = 1f;
+
+        if (RunModifierSystem.Instance != null)
+        {
+            fireMultiplier =
+                RunModifierSystem.Instance.GetEnemyFireRateMultiplier();
+        }
+
+        cooldownTimer = attackCooldown * fireMultiplier;
         isAiming = false;
     }
 

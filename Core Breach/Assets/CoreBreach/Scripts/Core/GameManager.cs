@@ -18,8 +18,10 @@ public class GameManager : MonoBehaviour
     public int CurrentDepth => currentDepth;
     public int Score => score;
 
-    public GameState CurrentState { get; private set; } = GameState.Playing;
+    public GameState CurrentState { get; private set; } = GameState.MainMenu;
+    public bool HasActiveRun { get; private set; } = false;
 
+    public event Action<GameState> OnStateChanged;
     public event Action<int> OnScrapChanged;
     public event Action<int> OnScoreChanged;
     public event Action<int> OnDepthChanged;
@@ -27,6 +29,87 @@ public class GameManager : MonoBehaviour
 
     private const string PREF_HIGH_SCORE = "CoreBreach_HighScore";
     private const string PREF_TOTAL_SCRAP = "CoreBreach_TotalScrap";
+
+    public void ChangeState(GameState newState)
+    {
+        if (CurrentState == newState) return;
+        GameState oldState = CurrentState;
+        CurrentState = newState;
+
+        if (newState == GameState.Playing)
+        {
+            HasActiveRun = true;
+            Time.timeScale = 1f;
+        }
+        else if (newState == GameState.Paused)
+        {
+            Time.timeScale = 0f;
+        }
+        else if (newState == GameState.MainMenu || newState == GameState.CharacterSelect)
+        {
+            Time.timeScale = 1f;
+        }
+        else if (newState == GameState.Victory)
+        {
+            HasActiveRun = false;
+            Time.timeScale = 0f;
+        }
+
+        OnStateChanged?.Invoke(newState);
+        Debug.Log($"[GameManager] Chuyển trạng thái: {oldState} -> {newState}");
+    }
+
+    public void SetState(GameState newState)
+    {
+        ChangeState(newState);
+    }
+
+    public void PauseGame()
+    {
+        if (CurrentState == GameState.Playing)
+        {
+            ChangeState(GameState.Paused);
+        }
+    }
+
+    public void ResumeGame()
+    {
+        if (CurrentState == GameState.Paused)
+        {
+            ChangeState(GameState.Playing);
+        }
+    }
+
+    public void ReturnToMainMenu()
+    {
+        Time.timeScale = 1f;
+        ChangeState(GameState.MainMenu);
+    }
+
+    public void StartNewRun()
+    {
+        currentScrap = 0;
+        currentDepth = 1;
+        score = 0;
+        HasActiveRun = false;
+        Time.timeScale = 1f;
+        OnScrapChanged?.Invoke(currentScrap);
+        OnDepthChanged?.Invoke(currentDepth);
+        OnScoreChanged?.Invoke(score);
+        ChangeState(GameState.CharacterSelect);
+    }
+
+    /// <summary>
+    /// Thoát game an toàn hỗ trợ cả Unity Editor và Standalone Build
+    /// </summary>
+    public static void QuitGame()
+    {
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.isPlaying = false;
+#else
+        Application.Quit();
+#endif
+    }
 
     private void Awake()
     {
@@ -36,12 +119,16 @@ public class GameManager : MonoBehaviour
             return;
         }
         Instance = this;
+
+        // Đảm bảo luôn có MainMenuSystem và PauseMenu hoạt động đồng bộ
+        if (GetComponent<MainMenuSystem>() == null) gameObject.AddComponent<MainMenuSystem>();
+        if (GetComponent<PauseMenu>() == null) gameObject.AddComponent<PauseMenu>();
     }
 
     private void Start()
     {
         // Lắng nghe sự kiện chết của Player
-        PlayerHealth playerHealth = FindObjectOfType<PlayerHealth>();
+        PlayerHealth playerHealth = FindFirstObjectByType<PlayerHealth>();
         if (playerHealth != null)
         {
             playerHealth.OnPlayerDeath += TriggerGameOver;
@@ -73,7 +160,8 @@ public class GameManager : MonoBehaviour
     public void TriggerGameOver()
     {
         if (CurrentState == GameState.GameOver) return;
-        CurrentState = GameState.GameOver;
+        HasActiveRun = false;
+        ChangeState(GameState.GameOver);
 
         // Lưu điểm kỷ lục và tích luỹ Scrap vĩnh viễn (Meta-progression)
         int bestScore = PlayerPrefs.GetInt(PREF_HIGH_SCORE, 0);
@@ -95,6 +183,15 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
+    public void CompleteRun()
+    {
+        if (CurrentState == GameState.Victory)
+            return;
+
+        HasActiveRun = false;
+        ChangeState(GameState.Victory);
     }
 }
 
